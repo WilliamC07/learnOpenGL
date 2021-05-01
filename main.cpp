@@ -124,6 +124,8 @@ int main(void) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  std::cout << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
+  std::cout << "GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
   /* Create a windowed mode window and its OpenGL context */
   window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
@@ -135,29 +137,40 @@ int main(void) {
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
 
+  // vertex array object
   unsigned int VAO;
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
 
-  float positions[6] = {
-    -0.5f, -0.5f, // this is 1st vertex
-    0.0f, 0.5f, // this is the 2nd vertex
-    0.5f, -0.5f // this is the 3rd vertex
+  float positions[] = {
+    -0.5f, -0.5f,  // bottom left
+    0.5f, -0.5f,   // bottom right
+    0.5f, 0.5f,    // top right
+    -0.5, 0.5f     // top left
   };
+  // MUST BE unsigned int
+  GLuint indices[] = {
+    0, 1, 2,
+    2, 3, 0
+  }; // orientation matters (Think of Green's theorem)
+
   GLuint VBO;  // id of the buffer
   glGenBuffers(1, &VBO);  // creates a buffer, stores the ID in "buffer"
   // OpenGL will use the buffer that is currently binded
   glBindBuffer(GL_ARRAY_BUFFER, VBO);  // create an array buffer (byte array)
-  glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
+
+  // index buffer object (element array buffer)
+  GLuint IBO;
+  glGenBuffers(1, &IBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * 2 * sizeof(indices), indices, GL_STATIC_DRAW);
 
   // must have this if we use attribute
   glEnableVertexAttribArray(0); // 0 is the index of attribute storing position
   // do this for each attribute of the vertex
   // in this case we just have 1 attribute
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
-
-  std::cout << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
-  std::cout << "GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
   auto[vertexShader, fragmentShader] = parseShader("resources/shaders/basic.shader");
   GLuint shader = createShaders(vertexShader, fragmentShader);
@@ -168,7 +181,8 @@ int main(void) {
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+//    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);
