@@ -124,8 +124,6 @@ int main(void) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  std::cout << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
-  std::cout << "GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
   /* Create a windowed mode window and its OpenGL context */
   window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
@@ -136,6 +134,8 @@ int main(void) {
 
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
+  std::cout << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
+  std::cout << "GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
   // vertex array object
   unsigned int VAO;
@@ -164,7 +164,7 @@ int main(void) {
   GLuint IBO;
   glGenBuffers(1, &IBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * 2 * sizeof(indices), indices, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
   // must have this if we use attribute
   glEnableVertexAttribArray(0); // 0 is the index of attribute storing position
