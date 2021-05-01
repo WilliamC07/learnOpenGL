@@ -51,6 +51,16 @@ static GLuint createShaders(const std::string &vertexShader, const std::string &
   // shaders are now part of "program"
   glLinkProgram(program);
   glValidateProgram(program);
+  GLint status;
+  glGetProgramiv(program, GL_LINK_STATUS, &status);
+  if(status == GL_FALSE){
+    int length;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+    char *message = new char[length];
+    glGetProgramInfoLog(program, length, NULL, message);
+    std::cout << "Failed linking shaders:\n"
+              << message << "\n";
+  }
 
   // like deleting the .o files when compiling c code
   glDeleteShader(vs);
@@ -104,22 +114,23 @@ int main(void) {
   // in this case we just have 1 attribute
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
-
   std::cout << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
   std::cout << "GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-  std::string vertexShader =
-    "#version 330 core\n"
-    "layout(location = 0) in vec2 position;\n"
-    "void main(){\n"
-    "   gl_Position = vec4(position, 0.0, 1.0);\n" // openGL knows "position" is a vec2, but can convert automatically to vec4
-    "}\n";
-  std::string fragmentShader =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main(){\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\n";
+  std::string vertexShader = R"(
+  #version 330 core
+  layout(location = 0) in vec2 position;
+  void main(){
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+  )";
+  std::string fragmentShader = R"(
+  #version 330 core
+  out vec4 FragColor;
+  void main(){
+    FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+  }
+  )";
   GLuint shader = createShaders(vertexShader, fragmentShader);
   glUseProgram(shader);
 
