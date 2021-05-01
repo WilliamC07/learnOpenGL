@@ -2,6 +2,9 @@
 #include <string>
 #include <iostream>
 #include <cassert>
+#include <fstream>
+#include <sstream>
+#include <utility>
 #include <GLFW/glfw3.h>
 #include <OpenGL/gl3.h>
 
@@ -70,6 +73,45 @@ static GLuint createShaders(const std::string &vertexShader, const std::string &
   return program;
 }
 
+/**
+ * Returns [vertex shader, fragment shader]
+ * @param filepath
+ * @return
+ */
+static std::pair<std::string, std::string> parseShader(const std::string &filepath){
+  std::ifstream stream{filepath};
+
+  if(!stream){
+    std::cout << "Could not open " << filepath << "\n";
+    exit(1);
+  }
+
+  enum class ShaderType {
+    NONE = -1,
+    VERTEX = 0,
+    FRAGMENT = 1
+  };
+  ShaderType type{ShaderType::NONE};
+  std::string line;
+  std::stringstream ss[2];
+  while(std::getline(stream, line)){
+    if(line.find("#shader") != std::string::npos){
+      if(line.find("vertex") != std::string::npos){
+        type = ShaderType::VERTEX;
+      }else if(line.find("fragment") != std::string::npos){
+        type = ShaderType::FRAGMENT;
+      }else{
+        assert(false);
+      }
+    }else{
+      assert(type != ShaderType::NONE);
+      ss[(int) type] << line << '\n';
+    }
+  }
+
+  return {ss[0].str(), ss[1].str()};
+}
+
 int main(void) {
   GLFWwindow *window;
 
@@ -117,20 +159,7 @@ int main(void) {
   std::cout << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
   std::cout << "GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-  std::string vertexShader = R"(
-  #version 330 core
-  layout(location = 0) in vec2 position;
-  void main(){
-    gl_Position = vec4(position, 0.0, 1.0);
-  }
-  )";
-  std::string fragmentShader = R"(
-  #version 330 core
-  out vec4 FragColor;
-  void main(){
-    FragColor = vec4(1.0, 0.5, 0.2, 1.0);
-  }
-  )";
+  auto[vertexShader, fragmentShader] = parseShader("resources/shaders/basic.shader");
   GLuint shader = createShaders(vertexShader, fragmentShader);
   glUseProgram(shader);
 
