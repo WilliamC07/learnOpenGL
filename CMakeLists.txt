@@ -11,3 +11,4 @@ add_executable(testglfw
 add_subdirectory(vendor/glfw)
 include_directories(vendor/glfw/include)
 target_link_libraries(testglfw glfw ${GLFW_LIBRARIES})
+file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
