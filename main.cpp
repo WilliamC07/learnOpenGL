@@ -5,7 +5,9 @@
 #include <cassert>
 #include <fstream>
 #include <sstream>
+#include <cmath>
 #include <utility>
+#include <filesystem>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -97,6 +99,8 @@ static GLuint createShaders(const std::string &vertexShader, const std::string &
  * @return
  */
 static std::pair<std::string, std::string> parseShader(const std::string &filepath){
+  auto cwd = std::filesystem::current_path().string();
+  std::cout << "Reading shaders from: " << cwd << '/' << filepath << "\n";
   std::ifstream stream{filepath};
 
   if(!stream){
@@ -153,6 +157,8 @@ int main(void) {
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
 
+  glfwSwapInterval(1); // sync to monitor refresh rate
+
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   {
     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -201,7 +207,14 @@ int main(void) {
   GLuint shader = createShaders(vertexShader, fragmentShader);
   glUseProgram(shader);
 
+  // shader uniforms:
+  int location = glGetUniformLocation(shader, "u_Color");
+  // -1 doesn't always mean there is an error
+  assert(location != -1);
+  glUniform4f(location, 1.0f, 0.3f, 0.8f, 1.0f);
+
   /* Loop until the user closes the window */
+  float tick = 0;
   while (!glfwWindowShouldClose(window)) {
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT);
@@ -210,6 +223,9 @@ int main(void) {
     // glDrawArrays(GL_TRIANGLES, 0, 6);
     // MUST BE unsigned int
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+    glUniform4f(location, 0.8f, 0.3f, std::sin(tick), 1.0f);
+    tick += .1;
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);

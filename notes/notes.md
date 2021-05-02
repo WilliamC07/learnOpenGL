@@ -26,6 +26,17 @@
 - For storing vertex attribute
 - Handles `glEnableVertexAttribArray/disable`, `glvertexAttribPointer`, and connects to VBO with `glVertexAttribPointer`
 
+## Uniforms
+- A way to get data from CPU to shaders (can also use vertex buffer)
+- Set per call (set the uniform before glDraw...)
+- Code:  
+  Shader:
+  ```
+  uniform vec<1,2,3,or 4> u_<variable name>;
+  ```
+  CPU: (after shader program is used by calling `glUseProgram`)
+
+  
 
 ## Shaders
 - Mainly deal with Fragment (pixel) and vertex shaders
