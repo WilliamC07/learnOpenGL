@@ -24,6 +24,28 @@
    git submodule update --init --recursive # inside cloned repo dir
    ```
    
+## Adding 3rd party library using cmake
+1. Create another directory in the root of the project (`vendor` in this project)
+2. Add the libraries there.
+3. If the libraries have a `CMakeLists.txt`, everything is good. If it doesn't, one needs to be created. See `vendor/glad/CmakeLists.txt` for an example on how to create one.
+4. In the root project CMakeLists.txt, add `add_subdirectory(vendor/<library dir name>)` for each library. Then add `target_link_libraries(<project name> <library> <and another library>)`.
+
+## Run cmake
+1. Create a build directory and change directory into it:  
+   `mkdir build && cd build`
+2. Run cmake  
+   `cmake ..`
+3. Run make  
+   `make`
+4. Run the executable  
+   `./testglfw`
+   
+## Cross platform code generation for OpenGL
+- [GLAD](https://gen.glad.sh/)
+- Make sure you choose "Version 4.1" for "gl" and "core". Add all the extensions. Then generate.
+- Generated files go into `vendor/glad`
+- Ordering matters for `#include` and initializing GLAD
+
 # Sources:
 - https://www.glfw.org/docs/3.0/build.html#build_link_cmake_source
 - https://stackoverflow.com/questions/23450334/opengl-3-3-4-1-on-mac-osx-10-9-using-glfw-library
