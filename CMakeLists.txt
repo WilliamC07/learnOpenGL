@@ -15,5 +15,5 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendor/glfw)
 
-target_link_libraries(testglfw glad glfw)
+target_link_libraries(testglfw glad glfw ${GLFW_LIBRARIES})
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
