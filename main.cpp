@@ -9,6 +9,23 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+/**
+ * GL error are like C errno.
+ * Reads in all the error codes
+ * Can be improved by using a macro that logs line number, file name, function call
+ * @return
+ */
+static void clearGLErrors(){
+  while(glGetError() != GL_NO_ERROR);
+}
+
+static void checkGLError(){
+  // error == 0 means no more errors
+  while(GLenum error = glGetError()){
+    std::cout << "OpenGL Error: " << error << "\n";
+  }
+}
+
 static GLuint compileShader(const std::string &source, GLenum type){
   GLuint id{glCreateShader(type)};
   const char *src = source.c_str();
@@ -189,7 +206,8 @@ int main(void) {
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT);
 
-//    glDrawArrays(GL_TRIANGLES, 0, 6);
+    // this is using immediate mode.
+    // glDrawArrays(GL_TRIANGLES, 0, 6);
     // MUST BE unsigned int
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 

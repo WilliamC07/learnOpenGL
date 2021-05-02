@@ -42,7 +42,7 @@
    
 ## Cross platform code generation for OpenGL
 - [GLAD](https://gen.glad.sh/)
-- Make sure you choose "Version 4.1" for "gl" and "core". Add all the extensions. Then generate.
+- Make sure you choose "Version 4.1" for "gl" and "core". Add all the extensions (I don't think you actually need all of them, but may as well in case). Then generate.
 - Generated files go into `vendor/glad`
 - Ordering matters for `#include` and initializing GLAD
 
