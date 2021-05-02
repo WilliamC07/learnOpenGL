@@ -1,12 +1,13 @@
 #define GL_SILENCE_DEPRECATION
+#define GLFW_INCLUDE_NONE
 #include <string>
 #include <iostream>
 #include <cassert>
 #include <fstream>
 #include <sstream>
 #include <utility>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <OpenGL/gl3.h>
 
 static GLuint compileShader(const std::string &source, GLenum type){
   GLuint id{glCreateShader(type)};
@@ -134,6 +135,13 @@ int main(void) {
 
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
+
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+  {
+    std::cout << "Failed to initialize GLAD" << std::endl;
+    return -1;
+  }
+
   std::cout << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
   std::cout << "GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
@@ -182,6 +190,7 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT);
 
 //    glDrawArrays(GL_TRIANGLES, 0, 6);
+    // MUST BE unsigned int
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
     /* Swap front and back buffers */
