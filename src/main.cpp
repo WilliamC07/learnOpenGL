@@ -1,5 +1,6 @@
 #define GL_SILENCE_DEPRECATION
 #define GLFW_INCLUDE_NONE
+
 #include <string>
 #include <iostream>
 #include <cassert>
@@ -10,25 +11,14 @@
 #include <filesystem>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "renderer/ErrorChecker.h"
+#include "renderer/IndexBuffer.h"
+#include "renderer/VertexBuffer.h"
+#include "renderer/VertexArray.h"
 
-/**
- * GL error are like C errno.
- * Reads in all the error codes
- * Can be improved by using a macro that logs line number, file name, function call
- * @return
- */
-static void clearGLErrors(){
-  while(glGetError() != GL_NO_ERROR);
-}
+static GLuint compileShader(const std::string &source, GLenum type) {
+  ERROR_CHECKER
 
-static void checkGLError(){
-  // error == 0 means no more errors
-  while(GLenum error = glGetError()){
-    std::cout << "OpenGL Error: " << error << "\n";
-  }
-}
-
-static GLuint compileShader(const std::string &source, GLenum type){
   GLuint id{glCreateShader(type)};
   const char *src = source.c_str();
   glShaderSource(id, 1, &src, NULL);
@@ -36,7 +26,7 @@ static GLuint compileShader(const std::string &source, GLenum type){
 
   GLint result;
   glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-  if(result == GL_FALSE){
+  if (result == GL_FALSE) {
     // error in compiling
     int length;
     glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
@@ -59,7 +49,9 @@ static GLuint compileShader(const std::string &source, GLenum type){
  * @param fragmentShader Source code for fragment shader
  * @return
  */
-static GLuint createShaders(const std::string &vertexShader, const std::string &fragmentShader){
+static GLuint createShaders(const std::string &vertexShader, const std::string &fragmentShader) {
+  ERROR_CHECKER
+
   GLuint program{glCreateProgram()};
   GLuint vs{compileShader(vertexShader, GL_VERTEX_SHADER)};
   GLuint fs{compileShader(fragmentShader, GL_FRAGMENT_SHADER)};
@@ -76,7 +68,7 @@ static GLuint createShaders(const std::string &vertexShader, const std::string &
   glValidateProgram(program);
   GLint status;
   glGetProgramiv(program, GL_LINK_STATUS, &status);
-  if(status == GL_FALSE){
+  if (status == GL_FALSE) {
     int length;
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
     char *message = new char[length];
@@ -98,12 +90,12 @@ static GLuint createShaders(const std::string &vertexShader, const std::string &
  * @param filepath
  * @return
  */
-static std::pair<std::string, std::string> parseShader(const std::string &filepath){
+static std::pair<std::string, std::string> parseShader(const std::string &filepath) {
   auto cwd = std::filesystem::current_path().string();
   std::cout << "Reading shaders from: " << cwd << '/' << filepath << "\n";
   std::ifstream stream{filepath};
 
-  if(!stream){
+  if (!stream) {
     std::cout << "Could not open " << filepath << "\n";
     exit(1);
   }
@@ -116,16 +108,16 @@ static std::pair<std::string, std::string> parseShader(const std::string &filepa
   ShaderType type{ShaderType::NONE};
   std::string line;
   std::stringstream ss[2];
-  while(std::getline(stream, line)){
-    if(line.find("#shader") != std::string::npos){
-      if(line.find("vertex") != std::string::npos){
+  while (std::getline(stream, line)) {
+    if (line.find("#shader") != std::string::npos) {
+      if (line.find("vertex") != std::string::npos) {
         type = ShaderType::VERTEX;
-      }else if(line.find("fragment") != std::string::npos){
+      } else if (line.find("fragment") != std::string::npos) {
         type = ShaderType::FRAGMENT;
-      }else{
+      } else {
         assert(false);
       }
-    }else{
+    } else {
       assert(type != ShaderType::NONE);
       ss[(int) type] << line << '\n';
     }
@@ -141,6 +133,7 @@ int main(void) {
   if (!glfwInit())
     return -1;
 
+  // TODO: breaks on windows
   //https://www.glfw.org/faq.html#41---how-do-i-create-an-opengl-30-context
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -157,21 +150,15 @@ int main(void) {
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
 
-  glfwSwapInterval(1); // sync to monitor refresh rate
+  glfwSwapInterval(1); // sync to monitor refresh rate TODO: doesn't work on windows
 
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-  {
+  if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
     std::cout << "Failed to initialize GLAD" << std::endl;
     return -1;
   }
 
   std::cout << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
   std::cout << "GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-
-  // vertex array object
-  unsigned int VAO;
-  glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO);
 
   float positions[] = {
     -0.5f, -0.5f,  // bottom left
@@ -183,25 +170,15 @@ int main(void) {
   GLuint indices[] = {
     0, 1, 2,
     2, 3, 0
-  }; // orientation matters (Think of Green's theorem)
+  };
 
-  GLuint VBO;  // id of the buffer
-  glGenBuffers(1, &VBO);  // creates a buffer, stores the ID in "buffer"
-  // OpenGL will use the buffer that is currently binded
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);  // create an array buffer (byte array)
-  glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
+  VertexBuffer vertexBuffer{positions, sizeof(positions)};
+  VertexArray vertexArray{};
+  VertexBufferLayout layout;
+  layout.push<float>(2); // (x, y)
+  vertexArray.addBuffer(vertexBuffer, layout);
 
-  // index buffer object (element array buffer)
-  GLuint IBO;
-  glGenBuffers(1, &IBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-  // must have this if we use attribute
-  glEnableVertexAttribArray(0); // 0 is the index of attribute storing position
-  // do this for each attribute of the vertex
-  // in this case we just have 1 attribute
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+  IndexBuffer indexBuffer{indices, 6};
 
   auto[vertexShader, fragmentShader] = parseShader("resources/shaders/basic.shader");
   GLuint shader = createShaders(vertexShader, fragmentShader);
@@ -211,16 +188,16 @@ int main(void) {
   int location = glGetUniformLocation(shader, "u_Color");
   // -1 doesn't always mean there is an error
   assert(location != -1);
-  glUniform4f(location, 1.0f, 0.3f, 0.8f, 1.0f);
+  indexBuffer.bind();
 
   /* Loop until the user closes the window */
   float tick = 0;
   while (!glfwWindowShouldClose(window)) {
+    ERROR_CHECKER
+
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // this is using immediate mode.
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
     // MUST BE unsigned int
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 

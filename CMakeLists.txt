@@ -5,7 +5,7 @@ project(testglfw)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(testglfw
-        main.cpp)
+        src/main.cpp src/renderer/Renderer.cpp src/renderer/Renderer.h src/renderer/ErrorChecker.h src/renderer/VertexBuffer.cpp src/renderer/VertexBuffer.h src/renderer/IndexBuffer.cpp src/renderer/IndexBuffer.h src/renderer/VertexArray.cpp src/renderer/VertexArray.h src/renderer/VertexBufferLayout.h)
 
 add_subdirectory(vendor/glad)
 
