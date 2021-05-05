@@ -1,130 +1,15 @@
 #define GL_SILENCE_DEPRECATION
 #define GLFW_INCLUDE_NONE
 
-#include <string>
 #include <iostream>
-#include <cassert>
-#include <fstream>
-#include <sstream>
 #include <cmath>
-#include <utility>
-#include <filesystem>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "renderer/ErrorChecker.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/VertexBuffer.h"
 #include "renderer/VertexArray.h"
-
-static GLuint compileShader(const std::string &source, GLenum type) {
-  ERROR_CHECKER
-
-  GLuint id{glCreateShader(type)};
-  const char *src = source.c_str();
-  glShaderSource(id, 1, &src, NULL);
-  glCompileShader(id);
-
-  GLint result;
-  glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-  if (result == GL_FALSE) {
-    // error in compiling
-    int length;
-    glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-    // TODO: unique pointer learning?
-    char *message = new char[length];
-    glGetShaderInfoLog(id, length, &length, message);
-    std::cout << "Failed to compile shader "
-              << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << "\n";
-    std::cout << message << "\n";
-    delete[] message;
-    return 0;
-  }
-
-  return id;
-}
-
-/**
- * Create a shader program
- * @param vertexShader Source code for vertex shader
- * @param fragmentShader Source code for fragment shader
- * @return
- */
-static GLuint createShaders(const std::string &vertexShader, const std::string &fragmentShader) {
-  ERROR_CHECKER
-
-  GLuint program{glCreateProgram()};
-  GLuint vs{compileShader(vertexShader, GL_VERTEX_SHADER)};
-  GLuint fs{compileShader(fragmentShader, GL_FRAGMENT_SHADER)};
-
-  assert(vs);
-  assert(fs);
-
-  // link the shaders to the "program"
-  // like joining the .o program to main.cpp
-  glAttachShader(program, vs);
-  glAttachShader(program, fs);
-  // shaders are now part of "program"
-  glLinkProgram(program);
-  glValidateProgram(program);
-  GLint status;
-  glGetProgramiv(program, GL_LINK_STATUS, &status);
-  if (status == GL_FALSE) {
-    int length;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-    char *message = new char[length];
-    glGetProgramInfoLog(program, length, NULL, message);
-    std::cout << "Failed linking shaders:\n"
-              << message << "\n";
-  }
-
-  // like deleting the .o files when compiling c code
-  glDeleteShader(vs);
-  glDeleteShader(fs);
-
-  // technically should run glDeleteShader
-  return program;
-}
-
-/**
- * Returns [vertex shader, fragment shader]
- * @param filepath
- * @return
- */
-static std::pair<std::string, std::string> parseShader(const std::string &filepath) {
-  auto cwd = std::filesystem::current_path().string();
-  std::cout << "Reading shaders from: " << cwd << '/' << filepath << "\n";
-  std::ifstream stream{filepath};
-
-  if (!stream) {
-    std::cout << "Could not open " << filepath << "\n";
-    exit(1);
-  }
-
-  enum class ShaderType {
-    NONE = -1,
-    VERTEX = 0,
-    FRAGMENT = 1
-  };
-  ShaderType type{ShaderType::NONE};
-  std::string line;
-  std::stringstream ss[2];
-  while (std::getline(stream, line)) {
-    if (line.find("#shader") != std::string::npos) {
-      if (line.find("vertex") != std::string::npos) {
-        type = ShaderType::VERTEX;
-      } else if (line.find("fragment") != std::string::npos) {
-        type = ShaderType::FRAGMENT;
-      } else {
-        assert(false);
-      }
-    } else {
-      assert(type != ShaderType::NONE);
-      ss[(int) type] << line << '\n';
-    }
-  }
-
-  return {ss[0].str(), ss[1].str()};
-}
+#include "renderer/Shader.h"
 
 int main(void) {
   GLFWwindow *window;
@@ -133,12 +18,13 @@ int main(void) {
   if (!glfwInit())
     return -1;
 
-  // TODO: breaks on windows
+  // TODO: breaks on windows. START--
   //https://www.glfw.org/faq.html#41---how-do-i-create-an-opengl-30-context
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  // TODO: END--
 
   /* Create a windowed mode window and its OpenGL context */
   window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
@@ -150,7 +36,8 @@ int main(void) {
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
 
-  glfwSwapInterval(1); // sync to monitor refresh rate TODO: doesn't work on windows
+  // TODO: doesn't work on windows
+  glfwSwapInterval(1); // sync to monitor refresh rate
 
   if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -177,17 +64,11 @@ int main(void) {
   VertexBufferLayout layout;
   layout.push<float>(2); // (x, y)
   vertexArray.addBuffer(vertexBuffer, layout);
-
   IndexBuffer indexBuffer{indices, 6};
+  Shader shader{"resources/shaders/basic.shader"};
+  shader.bind();
 
-  auto[vertexShader, fragmentShader] = parseShader("resources/shaders/basic.shader");
-  GLuint shader = createShaders(vertexShader, fragmentShader);
-  glUseProgram(shader);
-
-  // shader uniforms:
-  int location = glGetUniformLocation(shader, "u_Color");
-  // -1 doesn't always mean there is an error
-  assert(location != -1);
+  vertexArray.bind();
   indexBuffer.bind();
 
   /* Loop until the user closes the window */
@@ -198,10 +79,11 @@ int main(void) {
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT);
 
+
     // MUST BE unsigned int
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
-    glUniform4f(location, 0.8f, 0.3f, std::sin(tick), 1.0f);
+    shader.setUniform4f("u_Color", 0.8f, 0.3f, std::sin(tick), 1.0f);
     tick += .1;
 
     /* Swap front and back buffers */
