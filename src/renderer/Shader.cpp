@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <glad/glad.h>
+#include <memory>
 #include <filesystem>
 
 #include "ErrorChecker.h"
@@ -73,13 +74,12 @@ GLuint Shader::compileShader(const std::string &source, GLenum type) const {
     // error in compiling
     int length;
     glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-    // TODO: unique pointer learning?
-    char *message = new char[length];
-    glGetShaderInfoLog(id, length, &length, message);
+    std::unique_ptr<char[]> message{new char[length]};
+
+    glGetShaderInfoLog(id, length, &length, message.get());
     std::cout << "Failed to compile shader "
               << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << "\n";
     std::cout << message << "\n";
-    delete[] message;
     assert(false);
   }
 
@@ -111,8 +111,8 @@ GLuint Shader::createShaders(const std::string &vertexShader, const std::string 
   if (status == GL_FALSE) {
     int length;
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-    char *message = new char[length];
-    glGetProgramInfoLog(program, length, NULL, message);
+    std::unique_ptr<char[]> message{new char[length]};
+    glGetProgramInfoLog(program, length, NULL, message.get());
     std::cout << "Failed linking shaders:\n"
               << message << "\n";
     assert(false);
