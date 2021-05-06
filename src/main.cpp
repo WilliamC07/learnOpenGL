@@ -1,4 +1,3 @@
-#define GL_SILENCE_DEPRECATION
 #define GLFW_INCLUDE_NONE
 
 #include <iostream>
@@ -10,6 +9,7 @@
 #include "renderer/VertexBuffer.h"
 #include "renderer/VertexArray.h"
 #include "renderer/Shader.h"
+#include "renderer/Renderer.h"
 
 int main(void) {
   GLFWwindow *window;
@@ -68,22 +68,17 @@ int main(void) {
   Shader shader{"resources/shaders/basic.shader"};
   shader.bind();
 
-  vertexArray.bind();
-  indexBuffer.bind();
+  Renderer renderer;
 
   /* Loop until the user closes the window */
   float tick = 0;
   while (!glfwWindowShouldClose(window)) {
     ERROR_CHECKER
-
-    /* Render here */
-    glClear(GL_COLOR_BUFFER_BIT);
-
-
-    // MUST BE unsigned int
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    renderer.clear();
 
     shader.setUniform4f("u_Color", 0.8f, 0.3f, std::sin(tick), 1.0f);
+    renderer.draw(vertexArray, indexBuffer, shader);
+
     tick += .1;
 
     /* Swap front and back buffers */
