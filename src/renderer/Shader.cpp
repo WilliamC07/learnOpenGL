@@ -35,6 +35,12 @@ void Shader::unbind() const {
   glUseProgram(0);
 }
 
+void Shader::setUniform1i(const std::string &name, int value) {
+  ERROR_CHECKER
+  GLint location{getUniformLocation(name)};
+  glUniform1i(location, value);
+}
+
 void Shader::setUniform4f(const std::string &name, float f0, float f1, float f2, float f3) {
   ERROR_CHECKER
   GLint location{getUniformLocation(name)};
@@ -167,3 +173,4 @@ std::pair<std::string, std::string> Shader::parseShader(const std::string &filep
 
   return {ss[0].str(), ss[1].str()};
 }
+

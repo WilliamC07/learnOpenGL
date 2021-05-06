@@ -1,7 +1,6 @@
 #define GLFW_INCLUDE_NONE
 
 #include <iostream>
-#include <cmath>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "renderer/ErrorChecker.h"
@@ -10,8 +9,9 @@
 #include "renderer/VertexArray.h"
 #include "renderer/Shader.h"
 #include "renderer/Renderer.h"
+#include "renderer/Texture.h"
 
-int main(void) {
+int main() {
   GLFWwindow *window;
 
   /* Initialize the library */
@@ -48,10 +48,11 @@ int main(void) {
   std::cout << "GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
   float positions[] = {
-    -0.5f, -0.5f,  // bottom left
-    0.5f, -0.5f,   // bottom right
-    0.5f, 0.5f,    // top right
-    -0.5, 0.5f     // top left
+    // position    texture
+    -0.5f, -0.5f,  0.0f, 0.0f,  // bottom left
+    0.5f, -0.5f,   1.0f, 0.0f,  // bottom right
+    0.5f, 0.5f,    1.0f, 1.0f,  // top right
+    -0.5, 0.5f,    0.0, 1.0f    // top left
   };
   // MUST BE unsigned int
   GLuint indices[] = {
@@ -59,14 +60,22 @@ int main(void) {
     2, 3, 0
   };
 
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+
   VertexBuffer vertexBuffer{positions, sizeof(positions)};
   VertexArray vertexArray{};
   VertexBufferLayout layout;
   layout.push<float>(2); // (x, y)
+  layout.push<float>(2);
   vertexArray.addBuffer(vertexBuffer, layout);
   IndexBuffer indexBuffer{indices, 6};
   Shader shader{"resources/shaders/basic.shader"};
   shader.bind();
+
+  Texture texture{"resources/textures/crab_nebula.png"};
+  texture.bind(0);
+  shader.setUniform1i("u_Texture", 0);
 
   Renderer renderer;
 
@@ -76,7 +85,7 @@ int main(void) {
     ERROR_CHECKER
     renderer.clear();
 
-    shader.setUniform4f("u_Color", 0.8f, 0.3f, std::sin(tick), 1.0f);
+//    shader.setUniform4f("u_Color", 0.8f, 0.3f, std::sin(tick), 1.0f);
     renderer.draw(vertexArray, indexBuffer, shader);
 
     tick += .1;

@@ -36,7 +36,9 @@
   ```
   CPU: (after shader program is used by calling `glUseProgram`)
 
-  
+## Textures
+- Careful about .png transparency. You will need to enable blending and you may not see 
+  the stretch depending on where the transparency is. 
 
 ## Shaders
 - Mainly deal with Fragment (pixel) and vertex shaders
