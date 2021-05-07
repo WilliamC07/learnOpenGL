@@ -22,7 +22,9 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendor/glfw)
 
+add_subdirectory(vendor/glm)
+
 # https://www.glfw.org/docs/3.0/build.html#build_link_cmake_source
 # May need to add GLU (add ${OPENGL_glu_LIBRARY})
-target_link_libraries(testglfw glad glfw ${GLFW_LIBRARIES})
+target_link_libraries(testglfw glad glfw ${GLFW_LIBRARIES} glm)
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})

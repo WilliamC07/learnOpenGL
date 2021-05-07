@@ -3,6 +3,8 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "renderer/ErrorChecker.h"
 #include "renderer/IndexBuffer.h"
 #include "renderer/VertexBuffer.h"
@@ -60,8 +62,8 @@ int main() {
     2, 3, 0
   };
 
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   VertexBuffer vertexBuffer{positions, sizeof(positions)};
   VertexArray vertexArray{};
@@ -73,7 +75,17 @@ int main() {
   Shader shader{"resources/shaders/basic.shader"};
   shader.bind();
 
-  Texture texture{"resources/textures/crab_nebula.png"};
+  // current window is 4:3
+  // -2 to 2 is 4 units; -1.5 to 1.5 is 3 units
+  glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
+  glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-1, 0, 0));
+  glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(1, 1, 0));
+
+  glm::mat4 mvp = proj * view * model;
+
+  shader.setUniformMat4f("u_modelViewProjection", mvp);
+
+  Texture texture{"resources/textures/crab_nebula.jpeg"};
   texture.bind(0);
   shader.setUniform1i("u_Texture", 0);
 

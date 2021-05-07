@@ -39,6 +39,24 @@
 ## Textures
 - Careful about .png transparency. You will need to enable blending and you may not see 
   the stretch depending on where the transparency is. 
+  
+## Matrix:
+- Orthogonal matrix: think of 2d rendering. map coordinate onto a 2d plane such that objects farther away do not appear farther
+- Perspective matrix: think of 3d rendering. farther away object looks smaller
+- Orthogonal is not limited to 2d, same with perspective
+
+# Projection
+- Projects something in 3d (the world) to 2d (the screen).
+
+# MVP
+- Model view projection
+- if mat are column major (which opengl uses): project mat * view * model * vertices
+- View mat: view of the camera (rotation, scale, translation of the camera) 
+- Model mat: model we are drawing (rotation, scale, translation of the object)
+
+## Blending
+Imagine if we have a red background, then placed a translucent blue square. Blending
+determines what to display on the screen at the overlapping region. 
 
 ## Shaders
 - Mainly deal with Fragment (pixel) and vertex shaders
