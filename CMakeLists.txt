@@ -12,7 +12,22 @@ add_executable(testglfw
         src/renderer/VertexArray.h src/renderer/VertexBufferLayout.h
         src/renderer/Shader.cpp src/renderer/Shader.h
         src/renderer/Texture.cpp src/renderer/Texture.h
-        src/vendor/stb_image/stb_image.h src/vendor/stb_image/std_image.cpp)
+        src/vendor/stb_image/stb_image.h src/vendor/stb_image/std_image.cpp
+        src/vendor/imgui/imconfig.h
+        src/vendor/imgui/imgui.cpp
+        src/vendor/imgui/imgui.h
+        src/vendor/imgui/imgui_demo.cpp
+        src/vendor/imgui/imgui_draw.cpp
+        src/vendor/imgui/imgui_impl_glfw.cpp
+        src/vendor/imgui/imgui_impl_glfw.h
+        src/vendor/imgui/imgui_impl_opengl3.cpp
+        src/vendor/imgui/imgui_impl_opengl3.h
+        src/vendor/imgui/imgui_internal.h
+        src/vendor/imgui/imgui_tables.cpp
+        src/vendor/imgui/imgui_widgets.cpp
+        src/vendor/imgui/imstb_rectpack.h
+        src/vendor/imgui/imstb_textedit.h
+        src/vendor/imgui/imstb_truetype.h)
 
 add_subdirectory(vendor/glad)
 
