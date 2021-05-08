@@ -19,7 +19,7 @@ class Renderer {
   public:
 
   void clear() const {
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    glClear(GL_COLOR_BUFFER_BIT);
   }
 
   void draw(const VertexArray &va, const IndexBuffer &ib, const Shader &shader){

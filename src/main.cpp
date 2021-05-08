@@ -66,9 +66,6 @@ int main() {
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   const char* glsl_version = "#version 150"; // mac specific (see example main.cpp in imgui repo for other Operating Sys)
   ImGui_ImplOpenGL3_Init(glsl_version);
-
-  bool show_demo_window = true;
-  bool show_another_window = false;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
   float positions[] = {
@@ -100,12 +97,7 @@ int main() {
   // current window is 4:3
   // -2 to 2 is 4 units; -1.5 to 1.5 is 3 units
   glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
-  glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-1, 0, 0));
-  glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(1, 1, 0));
-
-  glm::mat4 mvp = proj * view * model;
-
-  shader.setUniformMat4f("u_modelViewProjection", mvp);
+  glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
 
   Texture texture{"resources/textures/crab_nebula.jpeg"};
   texture.bind(0);
@@ -113,57 +105,33 @@ int main() {
 
   Renderer renderer;
 
+  glm::vec3 translation(1, 1, 0);
+
   /* Loop until the user closes the window */
-  float tick = 0;
   while (!glfwWindowShouldClose(window)) {
     ERROR_CHECKER
     renderer.clear();
 
-//    shader.setUniform4f("u_Color", 0.8f, 0.3f, std::sin(tick), 1.0f);
-    renderer.draw(vertexArray, indexBuffer, shader);
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
+    glm::mat4 mvp = proj * view * model;
+    shader.setUniformMat4f("u_modelViewProjection", mvp);
 
-    tick += .1;
+    renderer.draw(vertexArray, indexBuffer, shader);
 
     /* imgui start */
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-
-    // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-    if (show_demo_window)
-      ImGui::ShowDemoWindow(&show_demo_window);
-
-    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
     {
       static float f = 0.0f;
       static int counter = 0;
 
       ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-      ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-      ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-      ImGui::Checkbox("Another Window", &show_another_window);
-
-      ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+      ImGui::SliderFloat("translation", &translation.x, -1.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
       ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-      if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-        counter++;
-      ImGui::SameLine();
-      ImGui::Text("counter = %d", counter);
-
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-      ImGui::End();
-    }
-
-    // 3. Show another simple window.
-    if (show_another_window)
-    {
-      ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-      ImGui::Text("Hello from another window!");
-      if (ImGui::Button("Close Me"))
-        show_another_window = false;
       ImGui::End();
     }
 
@@ -173,9 +141,7 @@ int main() {
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
     glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
     /* imgui end */
 
     /* Swap front and back buffers */
